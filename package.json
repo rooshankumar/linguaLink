@@ -58,12 +58,14 @@
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^0.9.6",
     "zod": "^3.24.1",
+    "@auth/core": "latest",
+    "nodemailer": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",
-    "emoji-mart": "latest",
+    "firebase-admin": "latest",
+    "next-auth": "latest",
     "firebase": "latest",
-    "@emoji-mart/data": "latest",
-    "@emoji-mart/react": "latest"
+    "firebase-functions": "latest"
   },
   "devDependencies": {
     "@types/node": "^22",

@@ -2,28 +2,33 @@
 
 import type React from "react"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
-import { Smile, Send, Paperclip, Mic } from "lucide-react"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import data from "@emoji-mart/data"
-import Picker from "@emoji-mart/react"
-import { useTheme } from "next-themes"
+import { Send } from "lucide-react"
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void
+  onTyping: (isTyping: boolean) => void
 }
 
-export function ChatInput({ onSendMessage }: ChatInputProps) {
+export function ChatInput({ onSendMessage, onTyping }: ChatInputProps) {
   const [message, setMessage] = useState("")
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
-  const { theme } = useTheme()
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current)
+      }
+    }
+  }, [])
 
   const handleSendMessage = () => {
     if (message.trim()) {
-      onSendMessage(message)
+      onSendMessage(message.trim())
       setMessage("")
+      onTyping(false)
     }
   }
 
@@ -34,52 +39,33 @@ export function ChatInput({ onSendMessage }: ChatInputProps) {
     }
   }
 
-  const addEmoji = (emoji: any) => {
-    setMessage((prev) => prev + emoji.native)
-    textareaRef.current?.focus()
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setMessage(e.target.value)
+    onTyping(true)
+
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current)
+    }
+
+    typingTimeoutRef.current = setTimeout(() => {
+      onTyping(false)
+    }, 2000)
   }
 
   return (
-    <div className="border-t p-4">
-      <div className="flex items-end gap-2">
-        <div className="flex-1 relative">
-          <Textarea
-            ref={textareaRef}
-            placeholder="Type a message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="min-h-[60px] resize-none pr-12"
-          />
-          <div className="absolute bottom-2 right-2 flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-              <Paperclip className="h-5 w-5" />
-              <span className="sr-only">Attach file</span>
-            </Button>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full">
-                  <Smile className="h-5 w-5" />
-                  <span className="sr-only">Add emoji</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-full p-0 border-none" align="end">
-                <Picker data={data} onEmojiSelect={addEmoji} theme={theme === "dark" ? "dark" : "light"} />
-              </PopoverContent>
-            </Popover>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <Mic className="h-5 w-5" />
-            <span className="sr-only">Voice message</span>
-          </Button>
-          <Button onClick={handleSendMessage} disabled={!message.trim()} size="icon" className="rounded-full">
-            <Send className="h-5 w-5" />
-            <span className="sr-only">Send message</span>
-          </Button>
-        </div>
-      </div>
+    <div className="flex items-end space-x-2 p-4 border-t">
+      <Textarea
+        value={message}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        placeholder="Type a message..."
+        className="flex-grow"
+        rows={1}
+      />
+      <Button onClick={handleSendMessage} disabled={!message.trim()}>
+        <Send className="h-4 w-4" />
+        <span className="sr-only">Send message</span>
+      </Button>
     </div>
   )
 }
